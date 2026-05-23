@@ -1,169 +1,245 @@
-## ER-модель
-![ER Model](er_model.png)
-
-## Реляционная модель
-![Relational Model](rel_model.png)
-
 # Описание сущностей базы данных
 
 ---
 
 ## USER — Пользователь системы
 
-Хранит информацию о студентах
+Хранит информацию о студентах.
 
 | Атрибут | Тип | NULL | Ключ | Описание |
 |---|---|---|---|---|
 | `UserID` | INT | NOT NULL | PK | Суррогатный первичный ключ пользователя |
-| `GroupID` | INT | NOT NULL | FK → STUDY_GROUP | Учебная группа, в которой числится студент
-| `UserNickname` | VARCHAR(9) | NOT NULL | AK 1.1 | Уникальный логин для входа в систему |
+| `UserNickname` | VARCHAR(10) | NOT NULL | AK 1.1 | Уникальный логин пользователя |
 | `FirstName` | VARCHAR(100) | NOT NULL | — | Имя |
 | `Surname` | VARCHAR(100) | NOT NULL | — | Фамилия |
 | `MiddleName` | VARCHAR(100) | NULL | — | Отчество; NULL если отсутствует |
 | `BirthDate` | DATE | NOT NULL | — | Дата рождения |
-| `Gender` | CHAR(10) | NOT NULL | — | Пол
+| `Gender` | VARCHAR(10) | NOT NULL | — | Пол |
 | `Citizenship` | VARCHAR(100) | NOT NULL | — | Гражданство |
-| `EnrollmentYear` | INT | NOT NULL | — | Год зачисления в университет |
-| `FundingType` | VARCHAR(50) | NOT NULL | — | Вид финансирования: бюджет, контракт, платная |
-| `DormitoryResident` | BOOLEAN | NOT NULL | — | Проживание в общежитии
-| `Status` | VARCHAR(50) | NOT NULL | — | Статус(активный, академотпуск, отчислен) |
-| `CurrentCourse` | INT | NULL | — | Текущий курс обучения
+| `EnrollmentYear` | INT | NOT NULL | — | Год поступления |
+| `FundingType` | VARCHAR(50) | NOT NULL | — | Тип финансирования |
+| `DormitoryResident` | BOOLEAN | NOT NULL | — | Признак проживания в общежитии |
+| `Status` | VARCHAR(50) | NOT NULL | — | Статус студента (обучается, отчислен, академический отпуск) |
+| `CurrentCourse` | INT | NOT NULL | — | Текущий курс |
 
 ---
 
 ## SESSION — Сессия пользователя
 
-Фиксирует каждый отдельный визит пользователя на платформу: когда зашёл, когда вышел и с какого устройства
+Фиксирует отдельный визит пользователя на платформу.
 
 | Атрибут | Тип | NULL | Ключ | Описание |
 |---|---|---|---|---|
 | `SessionID` | INT | NOT NULL | PK | Суррогатный первичный ключ сессии |
 | `UserID` | INT | NOT NULL | FK → USER | Пользователь, которому принадлежит сессия |
 | `SessionStart` | TIMESTAMP | NOT NULL | — | Дата и время начала сессии |
-| `SessionEnd` | TIMESTAMP | NULL | — | Дата и время окончания; NULL если сессия ещё активна |
-| `DeviceType` | VARCHAR(50) | NOT NULL | — | Тип устройства
+| `SessionEnd` | TIMESTAMP | NULL | — | Дата и время окончания; NULL если сессия активна |
+| `DeviceType` | VARCHAR(50) | NOT NULL | — | Тип устройства |
 
 ---
 
 ## EVENT — Событие в сессии
 
-Журнал действий пользователя внутри одной сессии: каждый клик, просмотр страницы, загрузка файла и т. д
+Действие пользователя внутри сессии.
 
 | Атрибут | Тип | NULL | Ключ | Описание |
 |---|---|---|---|---|
 | `EventID` | INT | NOT NULL | PK | Суррогатный первичный ключ события |
 | `PageID` | INT | NOT NULL | FK → PAGE | Страница, на которой произошло событие |
-| `NextPageID` | INT | NULL | FK → PAGE | Следующая страница перехода; NULL если переход не зафиксирован |
-| `SessionID` | INT | NOT NULL | FK → SESSION, AK 1.1 | Сессия, в рамках которой зафиксировано событие |
-| `EventTime` | TIMESTAMP | NOT NULL | AK 1.2 | Точное время события; вместе с SessionID образует альтернативный ключ |
-| `EventType` | VARCHAR(50) | NOT NULL | — | Тип действия
-| `ElementName` | VARCHAR(100) | NULL | — | Название элемента интерфейса, с которым взаимодействовал пользователь |
+| `NextPageID` | INT | NULL | FK → PAGE | Следующая страница перехода |
+| `SessionID` | INT | NOT NULL | FK → SESSION, AK 1.1 | Сессия, в рамках которой произошло событие |
+| `EventTime` | TIMESTAMP | NOT NULL | AK 1.2 | Время события; вместе с SessionID образует альтернативный ключ |
+| `EventType` | VARCHAR(50) | NOT NULL | — | Тип действия пользователя |
+| `ElementName` | VARCHAR(100) | NULL | — | Название элемента интерфейса |
+| `Purpose` | VARCHAR(100) | NULL | — | Цель или контекст события |
 
 ---
 
 ## PAGE — Страница сайта
 
-Справочник страниц платформы. Используется для привязки событий к конкретным разделам сайта
+Справочник страниц платформы.
 
 | Атрибут | Тип | NULL | Ключ | Описание |
 |---|---|---|---|---|
 | `PageID` | INT | NOT NULL | PK | Суррогатный первичный ключ страницы |
-| `PagePath` | VARCHAR(255) | NOT NULL | AK 1.1 | Уникальный URL страницы
+| `PagePath` | VARCHAR(255) | NOT NULL | AK 1.1 | Уникальный URL страницы |
 | `PageName` | VARCHAR(255) | NOT NULL | — | Название страницы |
-| `PageSection` | VARCHAR(100) | NOT NULL | — | Раздел сайта: профиль, расписание, успеваемость, материалы и т. д. |
+| `PageSection` | VARCHAR(100) | NOT NULL | — | Раздел сайта |
 
 ---
 
 ## STUDY_GROUP — Учебная группа
 
-Объединяет студентов одного набора, обучающихся по одной образовательной программе. К группе привязаны расписание экзаменов и связь с предметами
+Объединяет студентов одного набора в рамках образовательной программы.
 
 | Атрибут | Тип | NULL | Ключ | Описание |
 |---|---|---|---|---|
 | `GroupID` | INT | NOT NULL | PK | Суррогатный первичный ключ группы |
-| `ProgramID` | INT | NOT NULL | FK → PROGRAM | Образовательная программа, по которой учится группа |
-| `GroupName` | VARCHAR(50) | NOT NULL | AK 1.1 | Название группы
-| `Year` | INT | NOT NULL | AK 1.2 | Текущий год обучения(не более 4 или 6 лет); вместе с GroupName образует альтернативный ключ |
-| `EnrollmentYear` | INT | NOT NULL | — | Год поступления группы |
-| `Semestr` | INT | NOT NULL | — | Текущий семестр: 1 или 2 |
+| `ProgramID` | INT | NOT NULL | FK → PROGRAM | Образовательная программа |
+| `GroupName` | VARCHAR(50) | NOT NULL | AK 1.1 | Название группы |
+| `EnrollmentYear` | INT | NOT NULL | AK 1.2 | Год поступления группы |
+| `Course` | INT | NULL | — | Текущий курс обучения; NULL если группа выпустилась |
+| `Semestr` | INT | NOT NULL | — | Текущий семестр; NULL если группа выпустилась |
 
 ---
 
 ## PROGRAM — Образовательная программа
 
-Программ образования. Задаёт структуру: специальность, факультет, кафедра, форма и уровень образования
+Образовательные программы.
 
 | Атрибут | Тип | NULL | Ключ | Описание |
 |---|---|---|---|---|
 | `ProgramID` | INT | NOT NULL | PK | Суррогатный первичный ключ программы |
-| `EducationDegree` | VARCHAR(50) | NOT NULL | — | Уровень образования: бакалавриат, магистратура, специалитет, аспирантура |
-| `EducationForm` | VARCHAR(50) | NOT NULL | — | Форма обучения: очная, заочная, вечерняя |
-| `EducationCode` | VARCHAR(50) | NOT NULL | — | Код специальности
-| `YearOfStudy` | INT | NOT NULL | — | Нормативный срок обучения в годах |
-| `Profile` | VARCHAR(100) | NULL | — | Профиль подготовки; NULL если не предусмотрен программой |
-| `Speciality` | VARCHAR(100) | NOT NULL | — | Название специальности / направления |
-| `Faculty` | VARCHAR(100) | NOT NULL | — | Факультет |
-| `Department` | VARCHAR(100) | NOT NULL | — | Кафедра|
+| `DegreeID` | INT | NOT NULL | FK → EDUCATION_DEGREE | Уровень образования |
+| `FormID` | INT | NOT NULL | FK → EDUCATION_FORM | Форма обучения |
+| `DepartmentID` | INT | NOT NULL | FK → DEPARTMENT | Кафедра |
+| `EducationCode` | VARCHAR(50) | NOT NULL | — | Код образовательной программы |
+| `YearOfStudy` | INT | NOT NULL | — | Нормативный срок обучения |
+| `Profile` | VARCHAR(100) | NULL | — | Профиль подготовки |
+| `Speciality` | VARCHAR(100) | NOT NULL | — | Название специальности |
 
 ---
 
-## GRADE — Успеваемость студента
+## EDUCATION_DEGREE — Уровень образования
 
-Хранит итоговые баллы студента по предмету за семестр в разбивке по видам работ. Каждая запись соответствует одному предмету одного студента
+Уровень образования.
 
 | Атрибут | Тип | NULL | Ключ | Описание |
 |---|---|---|---|---|
-| `GradeID` | INT | NOT NULL | PK | Суррогатный первичный ключ записи об успеваемости |
-| `SubjectID` | INT | NOT NULL | FK → SUBJECT, AK 1.1 | Предмет, по которому выставлена оценка |
-| `UserID` | INT | NOT NULL | FK → USER, AK 1.2 | Студент; вместе с SubjectID образует альтернативный ключ |
-| `VisitedHours` | INT | NOT NULL | — | Количество посещённых аудиторных часов |
-| `RKScore` | INT | NOT NULL | — | Сколько сдал рубежных контролей |
-| `HWScore` | INT | NOT NULL | — | Сколько сдал домашних работ |
-| `LabScore` | INT | NOT NULL | — | Сколько сдал лабораторных работ |
-| `FinalScore` | INT | NOT NULL | — | Итоговый балл |
-| `IsPassed` | BOOLEAN | NULL | — | Зачтён ли предмет; NULL до закрытия семестра |
+| `DegreeID` | INT | NOT NULL | PK | Суррогатный первичный ключ уровня |
+| `DegreeName` | VARCHAR(100) | NOT NULL | — | Название уровня образования |
 
 ---
 
-## STUDY_GROUP_SUBJECT_INT — Связь группы с предметами
+## EDUCATION_FORM — Форма обучения
 
-Ассоциативная сущность, реализующая отношение многие-ко-многим между учебными группами и предметами
+Форма обучения.
 
 | Атрибут | Тип | NULL | Ключ | Описание |
 |---|---|---|---|---|
-| `GroupID` | INT | NOT NULL | PK, FK → STUDY_GROUP | Учебная группа |
-| `SubjectID` | INT | NOT NULL | PK, FK → SUBJECT | Предмет
+| `FormID` | INT | NOT NULL | PK | Суррогатный первичный ключ формы |
+| `FormName` | VARCHAR(100) | NOT NULL | — | Название формы обучения |
+
+---
+
+## FACULTY — Факультет
+
+Факультеты.
+
+| Атрибут | Тип | NULL | Ключ | Описание |
+|---|---|---|---|---|
+| `FacultyID` | INT | NOT NULL | PK | Суррогатный первичный ключ факультета |
+| `FacultyName` | VARCHAR(100) | NOT NULL | — | Название факультета |
+
+---
+
+## DEPARTMENT — Кафедра
+
+Кафедры.
+
+| Атрибут | Тип | NULL | Ключ | Описание |
+|---|---|---|---|---|
+| `DepartmentID` | INT | NOT NULL | PK | Суррогатный первичный ключ кафедры |
+| `FacultyID` | INT | NOT NULL | FK → FACULTY | Факультет |
+| `DepartmentName` | VARCHAR(100) | NOT NULL | — | Название кафедры |
 
 ---
 
 ## SUBJECT — Учебный предмет
 
-Справочник дисциплин. Содержит академические характеристики предмета: объём, семестр, кафедру и плановое количество контрольных точек
+Дисциплины.
 
 | Атрибут | Тип | NULL | Ключ | Описание |
 |---|---|---|---|---|
 | `SubjectID` | INT | NOT NULL | PK | Суррогатный первичный ключ предмета |
 | `SubjectName` | VARCHAR(200) | NOT NULL | — | Название дисциплины |
-| `Semestr` | INT | NOT NULL | — | Семестр(1 или 2)
-| `CreditHours` | INT | NOT NULL | — | Количество академических часов по учебному плану |
-| `Department` | VARCHAR(100) | NOT NULL | — | Кафедра, ведущая предмет |
-| `Type` | VARCHAR(50) | NOT NULL | — | Тип дисциплины: зачет, распределенный экзамен, экзамен, курсовая |
-| `CountLabs` | INT | NULL | — | Количество лабораторных работ; NULL если лабораторные не предусмотрены |
-| `CountRK` | INT | NULL | — | Количество рубежных контролей; NULL если не предусмотрены |
-| `CountDZ` | INT | NULL | — | Количество домашних заданий; NULL если не предусмотрены |
+| `Semestr` | INT | NOT NULL | — | Семестр преподавания |
+| `CreditHours` | INT | NOT NULL | — | Количество академических часов |
+| `Department` | VARCHAR(100) | NOT NULL | — | Кафедра |
+| `Type` | VARCHAR(50) | NOT NULL | — | Тип дисциплины |
+| `CountLabs` | INT | NULL | — | Количество лабораторных работ |
+| `CountRK` | INT | NULL | — | Количество рубежных контролей |
+| `CountDZ` | INT | NULL | — | Количество домашних заданий |
 
 ---
 
-## EXAM — Экзамен 
+## EXAM — Экзамен
 
-Фиксирует конкретное экзаменационное мероприятие для группы по предмету
+Фиксирует экзаменационное мероприятие по предмету.
 
 | Атрибут | Тип | NULL | Ключ | Описание |
 |---|---|---|---|---|
 | `ExamID` | INT | NOT NULL | PK | Суррогатный первичный ключ экзамена |
-| `GroupID` | INT | NOT NULL | FK → STUDY_GROUP, AK 1.1 | Группа, сдающая экзамен |
-| `SubjectID` | INT | NOT NULL | FK → SUBJECT, AK 1.2, AK 2.1 | Предмет экзамена; входит в оба альтернативных ключа |
-| `ExamDate` | DATE | NOT NULL | AK 2.2 | Дата проведения; вместе с SubjectID и ExamTime образует AK 2 |
-| `ExamTime` | TIME | NOT NULL | AK 2.3 | Время начала; вместе с SubjectID и ExamDate образует AK 2 |
+| `SubjectID` | INT | NOT NULL | FK → SUBJECT, AK 1.1 | Предмет экзамена |
+| `ExamDate` | DATE | NOT NULL | AK 1.2 | Дата проведения экзамена |
+| `ExamTime` | TIME | NOT NULL | AK 1.3 | Время начала экзамена |
+| `ExamType` | VARCHAR(50) | NOT NULL | — | Тип экзамена |
+| `PassedType` | VARCHAR(50) | NOT NULL | — | Тип попытки сдачи экзамена(досрочно, в срок, досдача, комиссия) |
 
+---
 
+## ATTENDANCE — Посещаемость
+
+Фиксирует факт присутствия студента на конкретном занятии.
+
+| Атрибут | Тип | NULL | Ключ | Описание |
+|---|---|---|---|---|
+| `AttendanceID` | INT | NOT NULL | PK | Суррогатный первичный ключ записи посещаемости |
+| `SubjectID` | INT | NOT NULL | FK → SUBJECT | Предмет занятия |
+| `UserID` | INT | NOT NULL | FK → USER | Студент |
+| `LessonDate` | DATE | NOT NULL | — | Дата занятия |
+| `LessonTime` | TIME | NOT NULL | — | Время занятия |
+| `LessonType` | VARCHAR(50) | NOT NULL | — | Тип занятия (лекция, лабораторная и т.п.) |
+| `IsPresent` | BOOLEAN | NOT NULL | — | Признак присутствия студента |
+
+---
+
+## SCORE — Оценки студента
+
+Хранит детализированные оценки студента по дисциплине с указанием даты и попытки.
+
+| Атрибут | Тип | NULL | Ключ | Описание |
+|---|---|---|---|---|
+| `ScoreID` | INT | NOT NULL | PK | Суррогатный первичный ключ оценки |
+| `SubjectID` | INT | NOT NULL | FK → SUBJECT | Предмет |
+| `UserID` | INT | NOT NULL | FK → USER | Студент |
+| `ScoreDate` | DATE | NOT NULL | — | Дата выставления оценки |
+| `ScoreType` | VARCHAR(50) | NOT NULL | — | Тип оценки (РК, ДЗ, лаб. и т.п.) |
+| `Score` | INT | NOT NULL | — | Полученный балл |
+| `MaxScore` | INT | NOT NULL | — | Максимально возможный балл |
+| `AttemptNumber` | INT | NOT NULL | — | Номер попытки |
+| `IsPassed` | BOOLEAN | NOT NULL | — | Признак успешной сдачи |
+| `Module` | INT | NULL | — | Модуль  |
+
+---
+
+## USER_STUDY_GROUP — Связь студентов и групп
+
+Ассоциативная сущность между USER и STUDY_GROUP.
+
+| Атрибут | Тип | NULL | Ключ | Описание |
+|---|---|---|---|---|
+| `UserID` | INT | NOT NULL | PK, FK → USER | Студент |
+| `GroupID` | INT | NOT NULL | PK, FK → STUDY_GROUP | Учебная группа |
+
+---
+
+## USER_SUBJECT — Связь студентов и предметов
+
+Ассоциативная сущность между USER и SUBJECT.
+
+| Атрибут | Тип | NULL | Ключ | Описание |
+|---|---|---|---|---|
+| `UserID` | INT | NOT NULL | PK, FK → USER | Студент |
+| `SubjectID` | INT | NOT NULL | PK, FK → SUBJECT | Предмет |
+
+---
+
+## USER_EXAM — Связь студентов и экзаменов
+
+Ассоциативная сущность между USER и EXAM.
+
+| Атрибут | Тип | NULL | Ключ | Описание |
+|---|---|---|---|---|
+| `UserID` | INT | NOT NULL | PK, FK → USER | Студент |
+| `ExamID` | INT | NOT NULL | PK, FK → EXAM | Экзамен |
