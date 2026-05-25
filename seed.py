@@ -301,10 +301,16 @@ def generate():
 
     programs_db = [p[:8] for p in progs_int]
 
-    # Группы: {FAC_CODE}{dept_num}-{sem}{grp_seq}{SUFFIX}
-    grp_name_cnt: dict = defaultdict(int)
-    study_groups  = []
-    prog_to_grps  = defaultdict(list)
+    # Группы: когортный подход.
+    # Когорта = (pid, enroll_year, grp_seq). Для каждой когорты создаём
+    # запись study_group на каждый пройденный семестр (1..current_sem).
+    # Имя группы: {FAC_CODE}{dept_num}-{sem}{grp_seq}{SUFFIX}
+    # Студент связывается со ВСЕМИ группами своей когорты (все прошедшие семестры).
+    study_groups = []
+    # cohort_sems[(pid, enroll_year, grp_seq)] = {sem: group_id}
+    cohort_sems: dict = {}
+    # prog_to_cohorts[pid] = [(enroll_year, grp_seq), ...]
+    prog_to_cohorts: dict = defaultdict(list)
 
     for p in progs_int:
         pid, _, _, _, _, _, _, _, deg_name, fac_code, fac_letter, dept_num = p
@@ -316,16 +322,24 @@ def generate():
         if not valid_yrs:
             valid_yrs = [2024]
 
-        for _ in range(random.randint(2, 4)):
-            gid         = len(study_groups) + 1
-            enroll_year = random.choice(valid_yrs)
+        # Для каждого учебного года набора создаём 2-4 параллельные группы
+        for enroll_year in random.sample(valid_yrs, min(len(valid_yrs), random.randint(1, 3))):
             course      = 2024 - enroll_year + 1
-            sem         = min(course * 2, max_sem)
-            key         = (fac_code, dept_num, sem, enroll_year, suffix)
-            grp_name_cnt[key] += 1
-            gname = f"{fac_code}{dept_num}-{sem}{grp_name_cnt[key]}{suffix}"
-            study_groups.append((gid, pid, gname, enroll_year, course, sem))
-            prog_to_grps[pid].append(gid)
+            current_sem = min(course * 2, max_sem)
+            n_grps      = random.randint(2, 4)
+
+            for grp_seq in range(1, n_grps + 1):
+                cohort_key = (pid, enroll_year, grp_seq)
+                cohort_sems[cohort_key] = {}
+                prog_to_cohorts[pid].append((enroll_year, grp_seq))
+
+                # Одна запись study_group на каждый семестр когорты
+                for sem in range(1, current_sem + 1):
+                    gid        = len(study_groups) + 1
+                    course_sem = (sem + 1) // 2
+                    gname      = f"{fac_code}{dept_num}-{sem}{grp_seq}{suffix}"
+                    study_groups.append((gid, pid, gname, enroll_year, course_sem, sem))
+                    cohort_sems[cohort_key][sem] = gid
 
     # Предметы
     used_subj: set = set()

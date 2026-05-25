@@ -1,13 +1,13 @@
 """
 EduAnalytics — Temporal Learning Analytics Platform
-Запуск: streamlit run app/main.py
+Запуск: streamlit run main.py
 """
 from __future__ import annotations
 
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import streamlit as st
 
@@ -22,7 +22,6 @@ st.markdown(
     """
     <style>
     .block-container { padding-top: 0.8rem; padding-bottom: 1rem; }
-    [data-testid="stSidebarNavItems"] li:first-child { display: none !important; }
     [data-testid="metric-container"] {
         background: rgba(255,255,255,0.04);
         border: 1px solid rgba(255,255,255,0.10);
@@ -36,20 +35,18 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-_HERE = os.path.dirname(os.path.abspath(__file__))
-
 pg = st.navigation([
     st.Page(
-        "pages/academic.py",
+        "app/pages/academic.py",
         title="Академическая аналитика",
         default=True,
     ),
     st.Page(
-        "pages/usage.py",
+        "app/pages/usage.py",
         title="Пользовательская аналитика",
     ),
     st.Page(
-        "pages/correlation.py",
+        "app/pages/correlation.py",
         title="Корреляция обучения",
     ),
 ])
