@@ -38,20 +38,22 @@ st.markdown(
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
-pg = st.navigation([
-    st.Page(
-        "pages/academic.py",
-        title="Академическая аналитика",
-        default=True,
-    ),
-    st.Page(
-        "pages/usage.py",
-        title="Пользовательская аналитика",
-    ),
-    st.Page(
-        "pages/correlation.py",
-        title="Корреляция обучения",
-    ),
-])
+pg = st.navigation({
+    " ": [
+        st.Page(
+            "pages/academic.py",
+            title="Академическая аналитика",
+            default=True,
+        ),
+        st.Page(
+            "pages/usage.py",
+            title="Пользовательская аналитика",
+        ),
+        st.Page(
+            "pages/correlation.py",
+            title="Корреляция обучения",
+        ),
+    ],
+})
 
 pg.run()

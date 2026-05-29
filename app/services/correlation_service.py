@@ -31,6 +31,13 @@ def _rolling_corr(s1: pd.Series, s2: pd.Series, window: int) -> pd.Series:
     return s1.rolling(window=window, min_periods=max(5, window // 3)).corr(s2).round(3)
 
 
+def _rolling_spearman(s1: pd.Series, s2: pd.Series, window: int) -> pd.Series:
+    # Global rank-transform → rolling Pearson of ranks ≈ rolling Spearman
+    r1 = s1.rank(method="average")
+    r2 = s2.rank(method="average")
+    return r1.rolling(window=window, min_periods=max(5, window // 3)).corr(r2).round(3)
+
+
 BEHAVIOR_COLS = [
     "session_count", "sessions_per_week", "event_count",
     "avg_duration_min", "active_days", "unique_pages", "events_per_session",
@@ -284,12 +291,19 @@ class CorrelationService:
         df["corr_att_sessions"] = _rolling_corr(df["attendance"], df["sessions"], window)
         df["corr_gpa_duration"] = _rolling_corr(df["gpa"], df["avg_duration_min"], window)
 
+        df["scorr_gpa_sessions"] = _rolling_spearman(df["gpa"], df["sessions"], window)
+        df["scorr_gpa_dau"]      = _rolling_spearman(df["gpa"], df["dau"],      window)
+        df["scorr_att_sessions"] = _rolling_spearman(df["attendance"], df["sessions"], window)
+        df["scorr_gpa_duration"] = _rolling_spearman(df["gpa"], df["avg_duration_min"], window)
+
         corr_cols = ["corr_gpa_sessions", "corr_gpa_dau",
                      "corr_att_sessions", "corr_gpa_duration"]
+        scorr_cols = ["scorr_gpa_sessions", "scorr_gpa_dau",
+                      "scorr_att_sessions", "scorr_gpa_duration"]
         df["coupling_index"] = df[corr_cols].abs().mean(axis=1).round(3)
         df = add_rolling_avg(df, "date", "coupling_index", windows=[7])
 
-        return df[["date"] + corr_cols + ["coupling_index", "coupling_index_ma7"]].reset_index(drop=True)
+        return df[["date"] + corr_cols + scorr_cols + ["coupling_index", "coupling_index_ma7"]].reset_index(drop=True)
 
     # ── Page impact analysis ───────────────────────────────────────────────────
 
